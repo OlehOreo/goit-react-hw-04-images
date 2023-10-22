@@ -11,7 +11,7 @@ export const LoadMore = styled.button`
   font-size: 24px;
   letter-spacing: 0.0275rem;
 
-  width: 200px;
+  width: 250px;
 
   text-align: center;
   text-decoration: none;
@@ -33,4 +33,8 @@ export const LoadMore = styled.button`
     transform: translateY(4px);
     background-color: #3e8e41;
   }
+`;
+export const Page = styled.span`
+  margin-left: 8px;
+  font-size: 18px;
 `;

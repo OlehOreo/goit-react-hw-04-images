@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 
 import { SearchBar } from './SearchBar/SearchBar';
@@ -8,99 +8,94 @@ import { BtnLoadMore } from './Button/Button';
 import { Loader } from './Loader/Loader';
 import { Error } from './Layout';
 
-export class App extends Component {
-  state = {
-    query: '',
-    page: 1,
-    loading: false,
-    imageGallery: [],
-    error: false,
+export const App = () => {
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [imageGallery, setImageGallery] = useState([]);
+  const [totalPage, setTotalPage] = useState(0);
+  const [error, setError] = useState(false);
+  const [toastMessage, setToastMessage] = useState(false);
+
+  useEffect(() => {
+    if (query === '') {
+      return;
+    }
+    queryImgGallery(query, page);
+  }, [query, page]);
+
+  const handlerSearchImg = newImg => {
+    setQuery(newImg);
+    setPage(1);
+    setImageGallery([]);
+    setToastMessage(false);
   };
 
-  handlerSearchImg = newImg => {
-    this.setState({
-      query: newImg,
-      page: 1,
-      imageGallery: [],
-      toast: false,
-    });
+  const handlerLoadMore = () => {
+    setPage(prevState => prevState + 1);
   };
 
-  handlerLoadMore = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
-  };
-
-  queryImgGallery = async (query, page, prevState) => {
+  const queryImgGallery = async (query, page) => {
     try {
-      this.setState({ loading: true, error: false });
+      setLoading(true);
+      setError(false);
 
-      const queryImg = await fetchImageGallery(query, page);
+      const queryImgData = await fetchImageGallery(query, page);
+      const queryImg = queryImgData.hits;
+
+      setTotalPage(Math.ceil(queryImgData.totalHits / 12));
 
       if (queryImg.length === 0) {
         toast.error('No images found, please change your search query', {
           style: { width: '1000px', height: '80px' },
         });
       }
-      if (!this.state.toast && queryImg.length > 0) {
+      if (!toastMessage && queryImg.length > 0) {
         toast.success('We found images');
-        this.setState({ toast: true });
+        setToastMessage(true);
       }
 
-      const newImages = queryImg.filter(
-        newImage => newImage.id !== prevState.imageGallery.id
-      );
-
-      this.setState(prevState => ({
-        imageGallery: [...prevState.imageGallery, ...newImages],
-      }));
+      setImageGallery(prevState => [...prevState, ...queryImg]);
     } catch (error) {
-      this.setState({ error: true });
+      setError(true);
     } finally {
-      this.setState({ loading: false });
+      setLoading(false);
     }
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    if (
-      prevState.query !== this.state.query ||
-      prevState.page !== this.state.page
-    ) {
-      const { query, page } = this.state;
-      this.queryImgGallery(query, page, prevState);
-    }
-  }
+  return (
+    <div>
+      <SearchBar onSubmit={handlerSearchImg} />
 
-  render() {
-    const { imageGallery, loading, error } = this.state;
+      {loading && <Loader />}
 
-    return (
-      <div>
-        <SearchBar onSubmit={this.handlerSearchImg} />
+      {error && <Error>Whoops! Error! Please reload this page!</Error>}
 
-        {loading && <Loader />}
+      {imageGallery.length > 0 && <ImageGallery apiImage={imageGallery} />}
 
-        {error && <Error>Whoops! Error! Please reload this page!</Error>}
-
-        {imageGallery.length > 0 && (
-          <ImageGallery apiImage={this.state.imageGallery} />
-        )}
-
-        {imageGallery.length > 0 && (
-          <BtnLoadMore onClick={this.handlerLoadMore} />
-        )}
-
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            style: {
-              height: '80px',
-              fontSize: '20px',
-              fontWeight: '400',
-              lineHeight: '20px',
-            },
-          }}
+      {imageGallery.length > 0 && (
+        <BtnLoadMore
+          onClick={handlerLoadMore}
+          page={page}
+          totalPage={totalPage}
         />
-      </div>
-    );
-  }
-}
+      )}
+
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            width: '500px',
+            borderRadius: '10px',
+            background: '#363b54',
+            color: '#fff',
+            height: '80px',
+            fontSize: '20px',
+            fontWeight: '400',
+            lineHeight: '20px',
+          },
+        }}
+      />
+    </div>
+  );
+};

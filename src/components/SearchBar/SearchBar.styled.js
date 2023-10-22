@@ -48,12 +48,18 @@ export const FormWrapper = styled.form`
 `;
 export const BtnSearch = styled.button`
   position: absolute;
-  top: 16px;
-  left: 16px;
+  top: 0;
+  left: 4px;
+  padding: 15px 16px;
 
   outline: none;
   border: none;
   background-color: transparent;
+  transition: 400ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+
+  &:hover {
+    transform: scale(1.2);
+  }
 
   svg {
     display: block;

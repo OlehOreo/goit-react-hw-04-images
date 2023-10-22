@@ -1,38 +1,32 @@
 import { ModalImg } from 'components/Modal/Modal';
 import { Img } from './ImageGalleryItem.styled';
-import { Component } from 'react';
+import { useState } from 'react';
 
-export class ImageGalleryItem extends Component {
-  state = {
-    isModalOpen: false,
-  };
+export const ImageGalleryItem = ({
+  apiImage: { webformatURL, largeImageURL, tags },
+}) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  openModal = () => {
-    this.setState({ isModalOpen: true });
+  const openModal = () => {
+    setIsModalOpen(true);
     document.body.style.overflow = 'hidden';
   };
 
-  closeModal = () => {
-    this.setState({ isModalOpen: false });
+  const closeModal = () => {
+    setIsModalOpen(false);
     document.body.style.overflow = 'auto';
   };
 
-  render() {
-    const { isModalOpen } = this.state;
-
-    const { webformatURL, largeImageURL, tags } = this.props.apiImage;
-
-    return (
-      <div>
-        <Img src={webformatURL} alt={tags} onClick={this.openModal} />
-        <ModalImg
-          isOpen={isModalOpen}
-          isClose={this.closeModal}
-          onRequestClose={this.closeModal}
-          srs={largeImageURL}
-          alt={tags}
-        />
-      </div>
-    );
-  }
-}
+  return (
+    <div>
+      <Img src={webformatURL} alt={tags} onClick={openModal} />
+      <ModalImg
+        isOpen={isModalOpen}
+        isClose={closeModal}
+        onRequestClose={closeModal}
+        srs={largeImageURL}
+        alt={tags}
+      />
+    </div>
+  );
+};
