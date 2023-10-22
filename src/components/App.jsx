@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 
 import { SearchBar } from './SearchBar/SearchBar';
@@ -17,12 +17,43 @@ export const App = () => {
   const [error, setError] = useState(false);
   const [toastMessage, setToastMessage] = useState(false);
 
+  const queryImgGallery = useCallback(
+    async (query, page) => {
+      try {
+        setLoading(true);
+        setError(false);
+
+        const queryImgData = await fetchImageGallery(query, page);
+        const queryImg = queryImgData.hits;
+
+        setTotalPage(Math.ceil(queryImgData.totalHits / 12));
+
+        if (queryImg.length === 0) {
+          toast.error('No images found, please change your search query', {
+            style: { width: '1000px', height: '80px' },
+          });
+        }
+        if (!toastMessage && queryImg.length > 0) {
+          toast.success('We found images');
+          setToastMessage(true);
+        }
+
+        setImageGallery(prevState => [...prevState, ...queryImg]);
+      } catch (error) {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [toastMessage]
+  );
+
   useEffect(() => {
     if (query === '') {
       return;
     }
     queryImgGallery(query, page);
-  }, [query, page]);
+  }, [query, page, queryImgGallery]);
 
   const handlerSearchImg = newImg => {
     setQuery(newImg);
@@ -33,34 +64,6 @@ export const App = () => {
 
   const handlerLoadMore = () => {
     setPage(prevState => prevState + 1);
-  };
-
-  const queryImgGallery = async (query, page) => {
-    try {
-      setLoading(true);
-      setError(false);
-
-      const queryImgData = await fetchImageGallery(query, page);
-      const queryImg = queryImgData.hits;
-
-      setTotalPage(Math.ceil(queryImgData.totalHits / 12));
-
-      if (queryImg.length === 0) {
-        toast.error('No images found, please change your search query', {
-          style: { width: '1000px', height: '80px' },
-        });
-      }
-      if (!toastMessage && queryImg.length > 0) {
-        toast.success('We found images');
-        setToastMessage(true);
-      }
-
-      setImageGallery(prevState => [...prevState, ...queryImg]);
-    } catch (error) {
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
